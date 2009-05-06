@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-import sys
 import logging
 from optparse import OptionParser
+import pickle
+import sys
 
 
 class Command(object):
@@ -30,6 +31,7 @@ class Command(object):
             argv = sys.argv
 
         parser = OptionParser()
+        self.parser = parser
         parser.add_option('-v', '--verbose', dest='verbose', action='count',
                           default=0, help="print more to console")
         parser.add_option('-q', '--quiet', dest='quiet', action='count',
@@ -45,5 +47,47 @@ class Command(object):
         return 0
 
 
+class Person(object):
+
+    def __init__(self, name):
+        self.name = name
+
+    @classmethod
+    def get(self, name):
+        try:
+            f = open('%s.person' % name, 'rb')
+        except IOError:
+            # No such file?
+            logging.info('Created new person %s', name)
+            return Person(name)
+
+        p = pickle.load(f)
+        logging.info('Loaded person %s', name)
+        return p
+
+    def save(self):
+        f = open('%s.person' % self.name, 'wb')
+        pickle.dump(self, f)
+        logging.info('Saved person %s', self.name)
+
+
+class Gopher(Command):
+
+    def add_options(self, parser):
+        parser.add_option('-p', '--person', dest='name',
+            help="person to act as")
+
+    def main(self, argv=None):
+        opt, arg = self.parse_args(argv)
+
+        if opt.name is None:
+            self.parser.error("Person parameter is required")
+
+        p = Person.get(opt.name)
+        p.save()
+
+        return 0
+
+
 if __name__ == '__main__':
-    sys.exit(Command().main())
+    sys.exit(Gopher().main())
