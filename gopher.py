@@ -5,6 +5,8 @@ from optparse import OptionParser
 import pickle
 import sys
 
+import accounts
+
 
 class Command(object):
 
@@ -65,6 +67,14 @@ class Person(object):
         logging.info('Loaded person %s', name)
         return p
 
+    def add_account(self, service):
+        if not hasattr(self, 'accounts'):
+            self.accounts = {}
+
+        account = accounts.account_for_service(service)()
+        account.configure()
+        self.accounts[service] = account
+
     def save(self):
         f = open('%s.person' % self.name, 'wb')
         pickle.dump(self, f)
@@ -76,6 +86,8 @@ class Gopher(Command):
     def add_options(self, parser):
         parser.add_option('-p', '--person', dest='name',
             help="person to act as")
+        parser.add_option('-a', '--add', '--account', dest='account',
+            help="add an account", metavar='SERVICE')
 
     def main(self, argv=None):
         opt, arg = self.parse_args(argv)
@@ -84,7 +96,12 @@ class Gopher(Command):
             self.parser.error("Person parameter is required")
 
         p = Person.get(opt.name)
-        p.save()
+
+        if opt.account is not None:
+            p.add_account(opt.account)
+            p.save()
+        else:
+            print "Accounts:", repr(p.accounts)
 
         return 0
 
