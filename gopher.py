@@ -95,6 +95,8 @@ class Gopher(Command):
             help="add an account", metavar='SERVICE')
         parser.add_option('--accounts', action='store_const', dest='command',
             const='accounts', help="list all of a person's accounts")
+        parser.add_option('--queue', action='store_const', dest='command',
+            const='queue', help="compile and print a person's queue")
 
     def main(self, argv=None):
         opt, arg = self.parse_args(argv)
@@ -113,6 +115,13 @@ class Gopher(Command):
             p.save()
         elif opt.command == 'accounts':
             print "Accounts:", repr(p.accounts)
+        elif opt.command == 'queue':
+            queue = list()
+            for servicename, account in p.accounts.iteritems():
+                queue.extend(account.queue())
+            print "## Queue ##"
+            for x in queue:
+                print x
 
         return 0
 

@@ -10,6 +10,9 @@ class Account(object):
     def configure(self):
         pass
 
+    def queue(self):
+        return ()
+
 
 class Netflix(Account):
 
