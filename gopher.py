@@ -83,11 +83,18 @@ class Person(object):
 
 class Gopher(Command):
 
+    def add_account(self, option, opt, value, parser):
+        parser.values.command = 'add'
+        setattr(parser.values, option.dest, value)
+
     def add_options(self, parser):
         parser.add_option('-p', '--person', dest='name',
             help="person to act as")
-        parser.add_option('-a', '--add', '--account', dest='account',
+        parser.add_option('--add', action='callback', dest='account',
+            type='string', callback=self.add_account,
             help="add an account", metavar='SERVICE')
+        parser.add_option('--accounts', action='store_const', dest='command',
+            const='accounts', help="list all of a person's accounts")
 
     def main(self, argv=None):
         opt, arg = self.parse_args(argv)
@@ -97,10 +104,14 @@ class Gopher(Command):
 
         p = Person.get(opt.name)
 
-        if opt.account is not None:
+        if opt.command is None:
+            print "No command was specified; one of --add or --accounts is required"
+            return 1
+
+        if opt.command == 'add':
             p.add_account(opt.account)
             p.save()
-        else:
+        elif opt.command == 'accounts':
             print "Accounts:", repr(p.accounts)
 
         return 0
