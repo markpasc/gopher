@@ -1,0 +1,1 @@
+-e svn+http://oauth.googlecode.com/svn/code/python/@904#egg=oauth
