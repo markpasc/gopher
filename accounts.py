@@ -1,7 +1,9 @@
 import httplib2
 from oauth.oauth import OAuthConsumer
+from elementtree import ElementTree
 
 from oauthclient import NetflixHttp
+from queue import Item
 import settings
 
 
@@ -50,6 +52,25 @@ class Hulu(Account):
 
         if response.status != 200:
             raise ValueError('Could not find Hulu account %r' % self.name)
+
+    def itemize_item(self, x):
+        title = x.find('title').text
+        link = x.find('link').text
+        date = x.find('pubDate').text
+        thumb = x.find('{http://search.yahoo.com/mrss/}thumbnail').get('url')
+        return Item(title=title, location=link, date=date, thumb=thumb)
+
+    def queue(self):
+        h = httplib2.Http()
+        url = 'http://www.hulu.com/feed/queue/%s' % self.name
+        response, content = h.request(url)
+
+        if response.status != 200:
+            raise ValueError('Could not fetch Hulu queue for %r' % self.name)
+
+        feed = ElementTree.fromstring(content)
+        items = feed.findall('.//item')
+        return [self.itemize_item(x) for x in items]
 
 
 services = {
