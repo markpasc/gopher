@@ -1,4 +1,6 @@
 from datetime import datetime
+import email.utils
+import time
 
 import httplib2
 from oauth.oauth import OAuthConsumer
@@ -130,8 +132,10 @@ class Hulu(Account):
         link = x.find('link').text
         thumb = x.find('{http://search.yahoo.com/mrss/}thumbnail').get('url')
 
-        date = x.find('pubDate').text
-        # TODO: parse date?
+        pubdate = x.find('pubDate').text
+        timestruct = email.utils.parsedate(pubdate)
+        timestamp = time.mktime(timestruct)
+        date = datetime.fromtimestamp(timestamp)
 
         return Item(title=title, location=link, date=date, thumb=thumb)
 
