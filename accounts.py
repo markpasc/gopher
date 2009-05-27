@@ -72,6 +72,9 @@ class Hulu(Account):
         items = feed.findall('.//item')
         return [self.itemize_item(x) for x in items]
 
+    def __str__(self):
+        return "Hulu: %s" % self.name
+
 
 services = {
     'netflix': Netflix,

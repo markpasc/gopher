@@ -114,7 +114,9 @@ class Gopher(Command):
             p.add_account(opt.account)
             p.save()
         elif opt.command == 'accounts':
-            print "Accounts:", repr(p.accounts)
+            print "## Accounts ##"
+            for x in p.accounts.values():
+                print x
         elif opt.command == 'queue':
             queue = list()
             for servicename, account in p.accounts.iteritems():
