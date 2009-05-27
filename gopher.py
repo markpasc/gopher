@@ -107,7 +107,7 @@ class Gopher(Command):
         p = Person.get(opt.name)
 
         if opt.command is None:
-            print "No command was specified; one of --add or --accounts is required"
+            print "No command was specified"
             return 1
 
         if opt.command == 'add':
