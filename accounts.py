@@ -63,31 +63,50 @@ class Netflix(Account):
         self.userid = userid
         self.name = ' '.join((firstname, lastname))
 
-    def itemize_item(self, item):
+    def itemize_item(self, item, dateattr='./updated'):
         title = item.find('./title').get('regular')
         link = item.find('./link[@rel="alternate"]').get('href')
         thumb = item.find('./box_art').get('large')
 
-        timestamp = item.find('./updated').text
-        date = datetime.fromtimestamp(int(timestamp))
+        timestamp_el = item.find(dateattr)
+        if timestamp_el is not None:
+            timestamp = timestamp_el.text
+            date = datetime.fromtimestamp(int(timestamp))
+        else:
+            date = datetime.fromtimestamp(0)
 
         return Item(title=title, location=link, date=date, thumb=thumb)
+
+    def at_home_queue(self):
+        h = self.http(self.access_token)
+        response, content = h.request("http://api.netflix.com/users/%s/at_home"
+            % self.userid)
+        if response.status != 200:
+            raise ValueError('Could not fetch Netflix at-home queue')
+
+        athome = ElementTree.fromstring(content)
+        items = athome.findall('./at_home_item')
+        if items is None:
+            return list()
+        return [self.itemize_item(item, dateattr='./estimated_arrival_date') for item in items]
 
     def instant_queue(self):
         h = self.http(self.access_token)
         response, content = h.request("http://api.netflix.com/users/%s/queues/instant/available"
             % self.userid)
         if response.status != 200:
-            raise ValueError('Could not fetch Netflix instant queue %s')
+            raise ValueError('Could not fetch Netflix instant queue')
 
         queue = ElementTree.fromstring(content)
         items = queue.findall('.//queue_item')
         if items is None:
-            return
+            return list()
         return [self.itemize_item(item) for item in items]
 
     def queue(self):
-        return self.instant_queue()
+        queue = self.at_home_queue()
+        queue.extend(self.instant_queue())
+        return queue
 
     def __str__(self):
         return "Netflix: %s" % self.name
