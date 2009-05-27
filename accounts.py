@@ -1,5 +1,6 @@
 from datetime import datetime
 import email.utils
+import re
 import time
 
 import httplib2
@@ -7,7 +8,7 @@ from oauth.oauth import OAuthConsumer
 from elementtree import ElementTree
 
 from oauthclient import NetflixHttp
-from queue import Item
+from queue import Item, Movie, Episode
 import settings
 
 
@@ -116,6 +117,14 @@ class Netflix(Account):
 
 class Hulu(Account):
 
+    show_title_re = re.compile(r"""
+        \A
+        ([^:]+) : \s+                    # series name
+        ([^(]+) \s+                      # episode name
+        \( s(\d+) \s* \| \s* e(\d+) \)   # episode number
+        \Z
+    """, re.VERBOSE | re.MULTILINE | re.DOTALL)
+
     def configure(self):
         self.name = raw_input('Enter your Hulu username: ')
 
@@ -137,7 +146,20 @@ class Hulu(Account):
         timestamp = time.mktime(timestruct)
         date = datetime.fromtimestamp(timestamp)
 
-        return Item(title=title, location=link, date=date, thumb=thumb)
+        info = {'location': link, 'date': date, 'thumb': thumb}
+        show_mo = re.match(self.show_title_re, title)
+        if show_mo is None:
+            itemclass = Movie
+            info['title'] = title
+        else:
+            itemclass = Episode
+            info.update({
+                'episode_number': '%s.%s' % show_mo.group(3, 4),
+                'show_title': show_mo.group(1),
+                'title': show_mo.group(2),
+            })
+
+        return itemclass(**info)
 
     def queue(self):
         h = httplib2.Http()

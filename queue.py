@@ -6,4 +6,12 @@ class Item(object):
         self.__dict__.update(kwargs)
 
     def __repr__(self):
-        return '<Item "%s" %s>' % (self.title, self.location)
+        return '<%s "%s" %s>' % (type(self).__name__, self.title, self.location)
+
+
+class Movie(Item):
+    pass
+
+
+class Episode(Item):
+    episode_number, show_title = None, None
