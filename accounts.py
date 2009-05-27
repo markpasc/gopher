@@ -39,6 +39,21 @@ class Netflix(Account):
         if response.status != 200:
             raise ValueError('Could not authorize Netflix account')
 
+        # Look for the user name.
+        culink = ElementTree.fromstring(content)
+        userlink = culink.find('./link')
+        userhref = userlink.get('href')
+
+        response, content = h.request(userhref)
+        userdoc = ElementTree.fromstring(content)
+        firstname = userdoc.find('./first_name').text
+        lastname = userdoc.find('./last_name').text
+
+        self.name = ' '.join((firstname, lastname))
+
+    def __str__(self):
+        return "Netflix: %s" % self.name
+
 
 class Hulu(Account):
 
