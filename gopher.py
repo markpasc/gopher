@@ -122,7 +122,7 @@ class Gopher(Command):
             for servicename, account in p.accounts.iteritems():
                 queue.extend(account.queue())
             print "## Queue ##"
-            for x in queue:
+            for x in sorted(queue, key=lambda x: x.date):
                 print x
 
         return 0
