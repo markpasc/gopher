@@ -66,8 +66,8 @@ class Netflix(Account):
         self.userid = userid
         self.name = ' '.join((firstname, lastname))
 
-    def itemize_item(self, item, dateattr='updated'):
-        title = item.find('title').get('regular')
+    def info_for_item(self, item, dateattr='updated', titleattr='regular'):
+        title = item.find('title').get(titleattr)
         link = item.find('link[@rel="alternate"]').get('href')
         thumb = item.find('box_art').get('large')
 
@@ -78,7 +78,7 @@ class Netflix(Account):
         else:
             date = datetime.fromtimestamp(0)
 
-        return Item(title=title, location=link, date=date, thumb=thumb)
+        return dict(title=title, location=link, date=date, thumb=thumb)
 
     def at_home_queue(self):
         h = self.http(self.access_token)
@@ -91,7 +91,9 @@ class Netflix(Account):
         items = athome.findall('at_home_item')
         if items is None:
             return list()
-        return [self.itemize_item(item, dateattr='estimated_arrival_date') for item in items]
+
+        return [Movie(**self.info_for_item(item, dateattr='estimated_arrival_date'))
+            for item in items]
 
     def instant_queue(self):
         h = self.http(self.access_token)
@@ -100,11 +102,37 @@ class Netflix(Account):
         if response.status != 200:
             raise ValueError('Could not fetch Netflix instant queue')
 
-        queue = ElementTree.fromstring(content)
-        items = queue.findall('queue_item')
+        queue = list()
+        queuedoc = ElementTree.fromstring(content)
+        items = queuedoc.findall('queue_item')
         if items is None:
-            return list()
-        return [self.itemize_item(item) for item in items]
+            return queue
+
+        for item in items:
+            iteminfo = self.info_for_item(item)
+
+            episodes = item.find('link[@rel="http://schemas.netflix.com/catalog/titles.programs"]')
+            if episodes is None:
+                queue.append(Movie(**iteminfo))
+                continue
+
+            proghref = episodes.get('href')
+            response, content = h.request(proghref)
+            if response.status != 200:
+                raise ValueError('Could not fetch program list %s: %s %s'
+                    % (proghref, response.status, response.reason))
+
+            progdoc = ElementTree.fromstring(content)
+            episodes = progdoc.findall('catalog_title')
+            if episodes is None:
+                continue  # ??
+            for episode in episodes:
+                info = self.info_for_item(episode, titleattr='episode_short')
+                # Episodes don't have date info, so snarf it from the real queue item.
+                info['date'] = iteminfo['date']
+                queue.append(Episode(**info))
+
+        return queue
 
     def queue(self):
         queue = self.at_home_queue()
