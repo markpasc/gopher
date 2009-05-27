@@ -51,7 +51,7 @@ class Netflix(Account):
 
         # Find the real user info.
         culink = ElementTree.fromstring(content)
-        userlink = culink.find('./link')
+        userlink = culink.find('link')
         userhref = userlink.get('href')
 
         # Look for the user name.
@@ -59,17 +59,17 @@ class Netflix(Account):
         if response.status != 200:
             raise ValueError('Could not fetch Netflix account')
         userdoc = ElementTree.fromstring(content)
-        userid = userdoc.find('./user_id').text
-        firstname = userdoc.find('./first_name').text
-        lastname = userdoc.find('./last_name').text
+        userid = userdoc.find('user_id').text
+        firstname = userdoc.find('first_name').text
+        lastname = userdoc.find('last_name').text
 
         self.userid = userid
         self.name = ' '.join((firstname, lastname))
 
-    def itemize_item(self, item, dateattr='./updated'):
-        title = item.find('./title').get('regular')
-        link = item.find('./link[@rel="alternate"]').get('href')
-        thumb = item.find('./box_art').get('large')
+    def itemize_item(self, item, dateattr='updated'):
+        title = item.find('title').get('regular')
+        link = item.find('link[@rel="alternate"]').get('href')
+        thumb = item.find('box_art').get('large')
 
         timestamp_el = item.find(dateattr)
         if timestamp_el is not None:
@@ -88,10 +88,10 @@ class Netflix(Account):
             raise ValueError('Could not fetch Netflix at-home queue')
 
         athome = ElementTree.fromstring(content)
-        items = athome.findall('./at_home_item')
+        items = athome.findall('at_home_item')
         if items is None:
             return list()
-        return [self.itemize_item(item, dateattr='./estimated_arrival_date') for item in items]
+        return [self.itemize_item(item, dateattr='estimated_arrival_date') for item in items]
 
     def instant_queue(self):
         h = self.http(self.access_token)
@@ -101,7 +101,7 @@ class Netflix(Account):
             raise ValueError('Could not fetch Netflix instant queue')
 
         queue = ElementTree.fromstring(content)
-        items = queue.findall('.//queue_item')
+        items = queue.findall('queue_item')
         if items is None:
             return list()
         return [self.itemize_item(item) for item in items]
