@@ -183,7 +183,7 @@ class NetflixHttp(OAuthHttp):
     request_token_url = 'http://api.netflix.com/oauth/request_token'
     access_token_url = 'http://api.netflix.com/oauth/access_token'
     authorization_url = 'https://api-user.netflix.com/oauth/login'
-    callback_url = 'http://www.postbin.org/vo7quz'
+    callback_url = None
 
     def authorize_token(self):
         ret = super(NetflixHttp, self).authorize_token()
