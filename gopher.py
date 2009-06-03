@@ -44,11 +44,7 @@ class Person(object):
 @optfunc.arghelp('person', 'person to whom to add the account')
 @optfunc.arghelp('service', 'kind of account to add')
 def add(person, service):
-    """add <person> <service>
-
-    Add an account.
-
-    """
+    """Add an account."""
     p = Person.get(person)
     p.add_account(service)
     p.save()
@@ -56,11 +52,7 @@ def add(person, service):
 
 @optfunc.arghelp('person', 'person whose accounts to list')
 def accounts(person):
-    """accounts <person>
-
-    List all of a person's accounts.
-
-    """
+    """List all of a person's accounts."""
     p = Person.get(person)
     print "## Accounts ##"
     for x in p.accounts.values():
@@ -69,11 +61,7 @@ def accounts(person):
 
 @optfunc.arghelp('person', 'person whose queue to show')
 def queue(person):
-    """queue <person>
-
-    Compile and print a person's queue.
-
-    """
+    """Compile and print a person's queue."""
     queue = list()
     for servicename, account in p.accounts.iteritems():
         queue.extend(account.queue())
