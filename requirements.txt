@@ -1,2 +1,3 @@
+-e git://github.com/markpasc/optfunc.git#egg=optfunc
 -e svn+http://svn.effbot.org/public/tags/elementtree-1.3a3-20070912/#egg=elementtree
 -e svn+http://oauth.googlecode.com/svn/code/python/@904#egg=oauth
